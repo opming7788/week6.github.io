@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>會員頁面</title>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      .container {
+        width: 500px;
+        margin: 0 auto;
+        margin-top: 20px;
+        text-align: center;
+      }
+      .input-group {
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+      }
+      .input-group label {
+        flex: 0 0 80px; /* 固定帳號和密碼文字的寬度 */
+        text-align: right;
+        margin-right: 10px;
+        font-size: 25px;
+      }
+      .input-group input {
+        flex: 1; /* 輸入欄位自動填滿剩餘寬度 */
+        padding: 10px;
+        box-sizing: border-box;
+      }
+      .header {
+        display: flex;
+        font-size: 30px;
+        width: 100%;
+        /* text-align: center; */
+        background-color: rgb(202, 181, 221);
+        align-items: center;
+        justify-content: center;
+        height: 100px;
+      }
+      .header2 {
+        display: flex;
+        font-size: 25px;
+        width: 100%;
+        /* text-align: center; */
+        margin-left: 10px;
+        align-items: end;
+        justify-content: center;
+        height: 80px;
+      }
+      button {
+        padding: 6px 12px; /* 上下各增加 6px，左右各增加 12px 的內邊距 */
+      }
+      .hline {
+        margin-top: 50px;
+      }
+      .usercontents {
+        font-size: 20px;
+        margin: 10px;
+      }
+      .custom-button {
+        width: 20px;
+        height: 20px;
+        padding: 0;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div>歡迎光臨，這是會員頁面</div>
+    </div>
+    <div class="header2">{{yourname}},歡迎登入系統</div>
+    <div class="header2"><a href="/signout">登出系統</a></div>
+    <hr />
+    <div class="header2">快來留言吧</div>
+    <div class="container">
+      <form action="/createMessage" method="post">
+        <div class="input-group">
+          <label for="username">內容</label>
+          <input type="text" id="mycontent" name="mycontent" required /><br />
+        </div>
+        <button type="submit">送出</button>
+      </form>
+    </div>
+    <hr />
+
+    <div class="container">
+      {% for usercontent in usersandcontents %}
+      <form
+        action="/DeleteMessage"
+        method="post"
+        onsubmit="return confirmDelete()"
+      >
+        <div class="usercontents">
+          <strong>{{usercontent[0]}}</strong> :{{usercontent[1]}} {% if username
+          == usercontent[2]%}
+          <input
+            type="hidden"
+            name="myDelcontent"
+            value="{{ usercontent[1] }}"
+          />
+          <button class="custom-button" type="submit" onclick="showAlert()">
+            X
+          </button>
+          {% endif %}
+        </div>
+      </form>
+      {% endfor %}
+    </div>
+
+    <hr />
+    <button onclick="showUserData()">顯示會員資料</button>
+    <table id="userTable" style="display: none">
+      <tr>
+        <th>username</th>
+        <th>email</th>
+        <th>password</th>
+      </tr>
+      {% for user in users %}
+      <tr>
+        <td>{{ user[1] }}</td>
+        <td>{{ user[2] }}</td>
+        <td>{{ user[3] }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <script>
+      function showUserData() {
+        var table = document.getElementById("userTable");
+        if (table.style.display === "none") {
+          table.style.display = "table";
+        } else {
+          table.style.display = "none";
+        }
+      }
+      function confirmDelete() {
+        return confirm("確定要刪除這條留言嗎？");
+      }
+    </script>
+  </body>
+</html>
