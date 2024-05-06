@@ -5,7 +5,7 @@ from starlette.responses import HTMLResponse,RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
 import mysql.connector
 
-# 创建 MySQL 连接
+# 創建 MySQL 連接
 con = mysql.connector.connect(
     host="localhost",
     user="root",
@@ -37,8 +37,7 @@ async def login_success(request: Request):
         cursor.execute("SELECT * FROM memberData")
         users = cursor.fetchall()
         username=request.session["username"][0]
-        # username=request.session["username"][1]
-        # print(username)
+        
         cursor.execute("SELECT memberData.yourname, memberContent.content,memberData.username \
                        FROM memberContent \
                        JOIN memberData ON memberContent.member_id = memberData.id \
@@ -90,8 +89,7 @@ async def signfromInternet(request: Request):
         return RedirectResponse(url="/")
 @app.post("/signin")
 async def signin(request: Request, username: str = Form(None), password: str = Form(None)):
-    # if "username" in request.session:
-    #     return "ok"
+    
     cursor=con.cursor()
     cursor.execute("SELECT * FROM memberData WHERE username = %s and password=%s", (username,password))
     user = cursor.fetchone()
@@ -102,8 +100,7 @@ async def signin(request: Request, username: str = Form(None), password: str = F
     
 @app.get("/signout")
 async def signout(request: Request):
-    # if "username" in request.session:
-    #     return RedirectResponse(url="/member")
+    
     if "username" in request.session:
         del request.session["username"]
     return RedirectResponse("/")
@@ -113,7 +110,7 @@ async def createMessage(request: Request, mycontent: str = Form(...)):
     if "username" not in request.session:
         return RedirectResponse("/")
     username=request.session["username"][0]
-    # print(username)
+    
     with con.cursor() as cursor:
         cursor.execute("SELECT id FROM memberData WHERE username = %s", (username,))
         user_id = cursor.fetchone()[0]
