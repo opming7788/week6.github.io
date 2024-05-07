@@ -73,7 +73,7 @@
     <div class="header">
       <div>歡迎光臨，這是會員頁面</div>
     </div>
-    <div class="header2">{{yourname}},歡迎登入系統</div>
+    <div class="header2">{{yourname}}，歡迎登入系統</div>
     <div class="header2"><a href="/signout">登出系統</a></div>
     <hr />
     <div class="header2">快來留言吧</div>
@@ -111,23 +111,6 @@
       </form>
       {% endfor %}
     </div>
-
-    <hr />
-    <button onclick="showUserData()">顯示會員資料</button>
-    <table id="userTable" style="display: none">
-      <tr>
-        <th>username</th>
-        <th>email</th>
-        <th>password</th>
-      </tr>
-      {% for user in users %}
-      <tr>
-        <td>{{ user[1] }}</td>
-        <td>{{ user[2] }}</td>
-        <td>{{ user[3] }}</td>
-      </tr>
-      {% endfor %}
-    </table>
 
     <script>
       function showUserData() {
