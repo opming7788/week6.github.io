@@ -9,7 +9,7 @@ import mysql.connector
 con = mysql.connector.connect(
     host="localhost",
     user="root",
-    password="xxxxxx",
+    password="abc31415",
     database="website"
 )
 
@@ -32,21 +32,19 @@ async def read_root(request: Request):
 async def login_success(request: Request):
     if "username" in request.session:
         cursor=con.cursor()
-        cursor.execute("SELECT * FROM member")
-        users = cursor.fetchall()
-        username=request.session["username"][0]
+        username=request.session["username"][1] #抓取會員帳號
         
-        cursor.execute("SELECT member.yourname, message.content,member.username \
+        #獲取每條留言的使用者yourname、留言內容和使用者的username，並按照留言的時間進行排序，以便以適當的順序顯示在網頁界面上
+        cursor.execute("SELECT member.yourname, message.content,member.username,message.id \
                        FROM message \
                        JOIN member ON message.member_id = member.id \
                        ORDER BY message.time DESC;")
+        usersandcontents = cursor.fetchall() #usersandcontents包含所有留言者的yourname，content，username，根據時間排序
         
-        usersandcontents = cursor.fetchall()
-        cursor.execute("SELECT yourname FROM member WHERE username=%s",(username,))
-        yourname=cursor.fetchone()[0]
+        yourname=request.session["username"][2]
         cursor.close()
-        return templates.TemplateResponse("member.html", {"request": request,"users":users,\
-                                                          "yourname":yourname,"username":username,"usersandcontents":usersandcontents})
+        return templates.TemplateResponse("member.html", {"request": request,"yourname":yourname,\
+                                                          "username":username,"usersandcontents":usersandcontents})
     else:
         return RedirectResponse(url="/")
     
@@ -56,15 +54,6 @@ async def error(request: Request,msg: str="發生錯誤"):
     if "username" in request.session:
         return RedirectResponse(url="/member")
     return templates.TemplateResponse("error.html", {"request": request,"msg":msg})
-
-#避免瀏覽器直接打入url="/signup"登入@app.post("/signup")，如果已登入讓其導向/member，沒登入讓其導向首頁url="/"
-@app.get("/signup")
-async def signupfromInternet(request: Request):
-    if "username" in request.session:
-        return RedirectResponse(url="/member")
-    else:
-        return RedirectResponse(url="/")
-
 #Signup Endpoint
 @app.post("/signup")
 async def signup(request: Request, yourname: str = Form(None), username: str = Form(None), password: str = Form(None)):
@@ -79,14 +68,6 @@ async def signup(request: Request, yourname: str = Form(None), username: str = F
         con.commit()
     # 新增成功後重新導向到首頁
     return RedirectResponse(url="/", status_code=303)
-
-#避免瀏覽器直接打入url="/signin"登入@app.post("/signup")，如果已登入讓其導向/member，沒登入讓其導向首頁url="/"    
-@app.get("/signin")
-async def signfromInternet(request: Request):
-    if "username" in request.session:
-        return RedirectResponse(url="/member")
-    else:
-        return RedirectResponse(url="/")
     
 #Signin Endpoint:
 @app.post("/signin")
@@ -97,7 +78,7 @@ async def signin(request: Request, username: str = Form(None), password: str = F
     user = cursor.fetchone()
     if user==None:
         return RedirectResponse("/error?msg=帳號或密碼輸入錯誤",status_code=303)
-    request.session["username"] = [user[2], user[3]] #將帳號與密碼放入sessionMiddleware
+    request.session["username"] = [user[0],user[2], user[1]] #將member id和帳號(username)與大名(yourname)放入sessionMiddleware
     return RedirectResponse("/member",status_code=303)
 
 #Signout Endpoint:    
@@ -113,11 +94,8 @@ async def signout(request: Request):
 async def createMessage(request: Request, mycontent: str = Form(...)):
     if "username" not in request.session:
         return RedirectResponse("/")
-    username=request.session["username"][0] #抓取sessionMiddleware中的使用者username
-    
-    with con.cursor() as cursor:
-        cursor.execute("SELECT id FROM member WHERE username = %s", (username,))
-        user_id = cursor.fetchone()[0]
+    username=request.session["username"][1] #抓取sessionMiddleware中的使用者username
+    user_id=request.session["username"][0]
     with con.cursor() as cursor:
         cursor.execute("INSERT INTO message (member_id, content) VALUES (%s, %s)", (user_id, mycontent))
         con.commit()
@@ -129,12 +107,9 @@ async def createMessage(request: Request, mycontent: str = Form(...)):
 async def DeleteMessage(request: Request, myDelcontent: str = Form(...)):
     if "username" not in request.session:
         return RedirectResponse("/")
-    username=request.session["username"][0]
     with con.cursor() as cursor:
-        cursor.execute("DELETE FROM message WHERE content =%s", (myDelcontent,))
+        cursor.execute("DELETE FROM message WHERE message.id =%s", (myDelcontent,))
     return RedirectResponse(url="/member", status_code=303)
-
-    
 
 if __name__ == "__main__":
     import uvicorn
