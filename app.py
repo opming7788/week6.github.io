@@ -20,9 +20,6 @@ app.add_middleware(SessionMiddleware, secret_key="mySignIn") ##提供一個秘�
 # 設置 Jinja2 模板
 templates = Jinja2Templates(directory="templates")
 
-# 設置靜態文件目錄
-# app.mount("/staticFile", StaticFiles(directory="staticFile"), name="static")
-
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     if "username" not in request.session:
